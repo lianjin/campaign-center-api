@@ -30,9 +30,13 @@ func NewRouter() *gin.Engine {
 		admin.GET("/campaigns/:campaignId", api.AdminGetCampaign)
 		admin.POST("/campaigns/:campaignId/publish", api.AdminPublishCampaign)
 
+		admin.POST("/landing-pages/:landingPageId/translations/generate", api.AdminGenerateLandingTranslation)
+		admin.GET("/landing-pages/:landingPageId/translations", api.AdminListLandingPageTranslatedLangs)
+		admin.PUT("/landing-pages/:landingPageId/translations/:lang", api.AdminPutLandingTranslation)
 		admin.POST("/landing-pages", api.AdminCreateLandingPage)
 		admin.PUT("/landing-pages/:landingPageId", api.AdminUpdateLandingPage)
 		admin.GET("/landing-pages", api.AdminListLandingPages)
+		admin.GET("/landing-pages/:landingPageId/detail/:lang", api.AdminGetLandingPageLocaleDetail)
 		admin.GET("/landing-pages/:landingPageId", api.AdminGetLandingPage)
 		admin.POST("/landing-pages/:landingPageId/publish", api.AdminPublishLandingPage)
 	}
