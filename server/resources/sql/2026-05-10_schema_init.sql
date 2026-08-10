@@ -60,54 +60,105 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------
--- campaigns
--- status: 1 draft, 2 published, 3 archive
--- reward_rules: JSON text (topupThreshold, rewardAmount, rewardType, maxClaimPerUser)
+-- campaigns (admin v2)
+-- status: 1 draft, 2 published
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `campaigns` (
   `id` BIGINT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) DEFAULT NULL,
-  `type` VARCHAR(64) DEFAULT NULL,
-  `target_market` VARCHAR(64) DEFAULT NULL,
+  `market` VARCHAR(64) DEFAULT NULL,
   `registration_start_time` DATETIME(3) DEFAULT NULL,
   `registration_end_time` DATETIME(3) DEFAULT NULL,
   `campaign_start_time` DATETIME(3) DEFAULT NULL,
   `campaign_end_time` DATETIME(3) DEFAULT NULL,
-  `target_user_segment` VARCHAR(64) DEFAULT NULL,
-  `reward_rules` TEXT,
-  `status` SMALLINT DEFAULT NULL COMMENT '1: draft 2: published 3: archive',
+  `target_user_group_id` BIGINT NOT NULL DEFAULT 0,
+  `budget_project_id` BIGINT NOT NULL DEFAULT 0,
+  `status` SMALLINT DEFAULT NULL COMMENT '1: draft 2: published',
   `created_at` DATETIME(3) DEFAULT NULL,
   `updated_at` DATETIME(3) DEFAULT NULL,
   `created_by` VARCHAR(255) NOT NULL DEFAULT '',
   `updated_by` VARCHAR(255) NOT NULL DEFAULT '',
   `landing_page_id` BIGINT NOT NULL DEFAULT 0 COMMENT 'bind campaign_landing_pages.id',
+  `time_zone` VARCHAR(64) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `idx_campaigns_landing_page_id` (`landing_page_id`),
-  KEY `idx_campaigns_status_type` (`status`, `type`)
+  KEY `idx_campaigns_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- campaign_drafts
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `campaign_drafts` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `activity_id` BIGINT NOT NULL COMMENT 'campaigns.id',
+  `content` TEXT COMMENT 'JSON body of editable campaign fields',
+  `version` INT NOT NULL DEFAULT 1,
+  `status` VARCHAR(32) NOT NULL DEFAULT 'draft' COMMENT 'draft / published',
+  `created_at` DATETIME(3) DEFAULT NULL,
+  `updated_at` DATETIME(3) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_campaign_drafts_activity_version` (`activity_id`, `version`),
+  KEY `idx_campaign_drafts_activity_status` (`activity_id`, `status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- campaign_reward_rules
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `campaign_reward_rules` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `campaign_id` BIGINT NOT NULL,
+  `ref_client` VARCHAR(32) NOT NULL COMMENT 'task / task_group',
+  `ref_id` BIGINT NOT NULL COMMENT 'task_id / task_group_id',
+  `reward_template_id` BIGINT NOT NULL DEFAULT 0,
+  `created_at` DATETIME(3) DEFAULT NULL,
+  `updated_at` DATETIME(3) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_campaign_reward_rules_campaign` (`campaign_id`),
+  KEY `idx_campaign_reward_rules_ref` (`ref_client`, `ref_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- campaign_user_rewards_ledger
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `campaign_user_rewards_ledger` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT NOT NULL,
+  `campaign_id` BIGINT NOT NULL,
+  `rule_id` BIGINT NOT NULL DEFAULT 0 COMMENT 'campaign_reward_rules.id',
+  `reward_status` VARCHAR(64) NOT NULL DEFAULT 'pending_distribution'
+    COMMENT 'pending_distribution / distributing / distribute_success / distribute_fail',
+  `voucher_id` VARCHAR(128) NOT NULL DEFAULT '' COMMENT 'reward voucher id',
+  `created_at` DATETIME(3) DEFAULT NULL,
+  `updated_at` DATETIME(3) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_rewards_ledger_user` (`user_id`),
+  KEY `idx_user_rewards_ledger_campaign` (`campaign_id`),
+  KEY `idx_user_rewards_ledger_rule` (`rule_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------
 -- campaign_participants
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `campaign_participants` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT,
-  `campaign_id` BIGINT DEFAULT NULL,
-  `user_id` BIGINT DEFAULT NULL,
-  `join_status` VARCHAR(32) DEFAULT NULL,
-  `task_status` VARCHAR(32) DEFAULT NULL,
-  `topup_amount` DECIMAL(18,2) DEFAULT NULL,
-  `risk_status` VARCHAR(32) DEFAULT NULL,
-  `reward_status` VARCHAR(32) DEFAULT NULL,
-  `reward_amount` DECIMAL(18,2) DEFAULT NULL,
-  `joined_at` DATETIME(3) DEFAULT NULL,
-  `completed_at` DATETIME(3) DEFAULT NULL,
-  `rewarded_at` DATETIME(3) DEFAULT NULL,
-  `updated_at` DATETIME(3) DEFAULT NULL,
+CREATE TABLE IF NOT EXISTS CREATE TABLE `campaign_participants` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `campaign_id` bigint DEFAULT NULL,
+  `user_id` bigint DEFAULT NULL,
+  `join_status` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `task_status` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `topup_amount` decimal(18,2) DEFAULT NULL,
+  `risk_status` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reward_status` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reward_amount` decimal(18,2) DEFAULT NULL,
+  `joined_at` datetime(3) DEFAULT NULL,
+  `completed_at` datetime(3) DEFAULT NULL,
+  `rewarded_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_user_campaign` (`user_id`,`campaign_id`),
   KEY `idx_participant_campaign` (`campaign_id`),
-  KEY `idx_participant_user` (`user_id`),
-  KEY `idx_participant_campaign_user` (`campaign_id`, `user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `idx_participant_user` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=90007 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 
 -- ---------------------------------------------------------------------------
 -- reward_transactions

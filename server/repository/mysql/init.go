@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/lianjin/campaign-center-api/server/repository/mysql/model"
+	"github.com/nusiss-capstone-project/campaign-center-api/server/repository/mysql/model"
 	gormmysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -21,18 +21,15 @@ func Init() (*gorm.DB, error) {
 		return nil, err
 	}
 	DB = database
+	if err := registerWriteLoggingCallbacks(DB); err != nil {
+		return DB, err
+	}
 	if err := DB.AutoMigrate(
 		&model.Campaign{},
 		&model.CampaignLandingPage{},
 		&model.CampaignLandingPageTranslation{},
-		&model.User{},
-		&model.UserAuthMapping{},
 		&model.CampaignParticipant{},
-		&model.RewardTransaction{},
 		&model.AuditLog{},
-		&model.UserAccount{},
-		&model.AccountTransaction{},
-		&model.CampaignPerformanceDaily{},
 	); err != nil {
 		return DB, err
 	}

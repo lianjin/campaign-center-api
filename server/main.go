@@ -9,18 +9,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/lianjin/campaign-center-api/server/config"
-	serverhttp "github.com/lianjin/campaign-center-api/server/http"
-	"github.com/lianjin/campaign-center-api/server/log"
-	"github.com/lianjin/campaign-center-api/server/repository/mysql"
-	"github.com/lianjin/campaign-center-api/server/telemetry"
+	"github.com/nusiss-capstone-project/campaign-center-api/server/config"
+	serverhttp "github.com/nusiss-capstone-project/campaign-center-api/server/http"
+	"github.com/nusiss-capstone-project/campaign-center-api/server/kafka/listener"
+	"github.com/nusiss-capstone-project/campaign-center-api/server/log"
+	"github.com/nusiss-capstone-project/campaign-center-api/server/repository/mysql"
+	"github.com/nusiss-capstone-project/campaign-center-api/server/telemetry"
 )
 
 var sigCh = make(chan os.Signal, 1)
 
 // @title Campaign Center API
 // @version 1.0
-// @description HTTP API for Phase 1 user top-up campaigns (admin + user-facing). Operates under `/campaign-center-api/v1`;
+// @description HTTP API for campaign center (admin campaign/landing-page + user campaign mocks). Operates under `/campaign-center-api/v1`;
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
@@ -49,9 +50,13 @@ func main() {
 		}
 	}()
 	log.Logger.Info("Telemetry initialized.")
+	kafkaCtx, kafkaCancel := context.WithCancel(context.Background())
+	defer kafkaCancel()
+	listener.Init(kafkaCtx)
 	go serverhttp.Init(sigCh)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-sigCh
 	debug.PrintStack()
 	log.Logger.Infof("Received signal: %v, shutting down", sig)
+	kafkaCancel()
 }

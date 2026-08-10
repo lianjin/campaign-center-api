@@ -12,13 +12,40 @@ redis:
   enabled: false
   host: 127.0.0.1
   port: "6379"
-# OpenAI: prefer env OPENAI_API_KEY for secrets; openai.api_key in file is optional.
+# OpenAI: API key from env OPENAI_API_KEY only.
 openai:
-  api_key: ""
   base_url: ""
   model: "gpt-4o-mini"
+
+# Aliyun OSS: AK/SK from env OSS_ACCESS_KEY_ID / OSS_ACCESS_KEY_SECRET only.
+oss:
+  endpoint: oss-ap-southeast-1.aliyuncs.com
+  bucket: campaign-center-img
+  public_base_url: "https://cdn.campaignhub.best"
+  key_prefix: campaign-center
+
+usergroup_grpc:
+  host: 127.0.0.1
+  port: 50051
+task_grpc:
+  host: 127.0.0.1
+  port: 50052
+reward_grpc:
+  host: 127.0.0.1
+  port: 50053
+
+kafka:
+  enabled: false
+  brokers:
+    - localhost:9092
+  group_id: campaign-center-api
+  client_id: campaign-center-api
+  topics:
+    - task.events.completed
+    - reward.distribution.result
 
 system:
   allowed_origins: 
   - https://campaign-center-admin-web.vercel.app
+  - https://finverse-web.vercel.app
   - http://localhost:3000

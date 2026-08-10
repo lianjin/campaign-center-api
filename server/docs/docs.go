@@ -51,9 +51,9 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Campaign type e.g. TOPUP_REWARD",
-                        "name": "type",
+                        "type": "integer",
+                        "description": "Campaign ID filter",
+                        "name": "campaignId",
                         "in": "query"
                     }
                 ],
@@ -61,7 +61,30 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/definitions/data.CampaignListVO"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "503": {
@@ -85,12 +108,12 @@ const docTemplate = `{
                 "summary": "Create campaign (admin)",
                 "parameters": [
                     {
-                        "description": "Campaign payload",
+                        "description": "Campaign name",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateCampaignReq"
+                            "$ref": "#/definitions/data.CreateCampaignReq"
                         }
                     }
                 ],
@@ -98,7 +121,24 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "campaignId": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -138,307 +178,23 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.CampaignVO"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "404": {
                         "description": "not found",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "database unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin-campaign"
-                ],
-                "summary": "Update campaign (admin)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Campaign ID",
-                        "name": "campaignId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Campaign payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.UpdateCampaignReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "success",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "bad request",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "not draft",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "database unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/campaigns/{campaignId}/archive": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin-campaign"
-                ],
-                "summary": "Archive campaign (admin)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Campaign ID",
-                        "name": "campaignId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Operator",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.PublishOperatorReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "success",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "bad request",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "not eligible or already archived",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "database unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/campaigns/{campaignId}/participations": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin-campaign-performance"
-                ],
-                "summary": "List campaign participations (admin)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Campaign ID",
-                        "name": "campaignId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page (default 1)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page size (default 20)",
-                        "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Filter by user ID",
-                        "name": "userId",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by reward status e.g. GRANTED",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "success",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "campaign not found",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "database unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/campaigns/{campaignId}/performance/daily": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin-campaign-performance"
-                ],
-                "summary": "List campaign daily performance (admin)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Campaign ID",
-                        "name": "campaignId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Start date YYYY-MM-DD",
-                        "name": "startDate",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "End date YYYY-MM-DD",
-                        "name": "endDate",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "success",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "bad request",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "campaign not found",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "database unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/campaigns/{campaignId}/performance/summary": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin-campaign-performance"
-                ],
-                "summary": "Get campaign performance summary (admin)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Campaign ID",
-                        "name": "campaignId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "success",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "campaign not found",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "database unavailable",
                         "schema": {
                             "$ref": "#/definitions/data.StandardResponse"
                         }
@@ -472,13 +228,148 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.PublishOperatorReq"
+                            "$ref": "#/definitions/data.PublishOperatorReq"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.CampaignVO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation error",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/campaigns/{campaignId}/users": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-participant"
+                ],
+                "summary": "List campaign participants (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Campaign ID",
+                        "name": "campaignId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.AdminParticipantListData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "bad request",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "campaign not found",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "database unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/campaigns/{campaignId}/users/{userId}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-participant"
+                ],
+                "summary": "Get campaign participant detail (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Campaign ID",
+                        "name": "campaignId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.AdminParticipantVO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "bad request",
                         "schema": {
                             "$ref": "#/definitions/data.StandardResponse"
                         }
@@ -491,6 +382,204 @@ const docTemplate = `{
                     },
                     "503": {
                         "description": "database unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/campaigns/{campaignId}/versions": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-campaign"
+                ],
+                "summary": "Create campaign version (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Campaign ID",
+                        "name": "campaignId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success; returns existing draft version when latest is still draft",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "campaignId": {
+                                                    "type": "integer"
+                                                },
+                                                "version": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "bad request",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/campaigns/{campaignId}/versions/{version}": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-campaign"
+                ],
+                "summary": "Edit campaign draft version (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Campaign ID",
+                        "name": "campaignId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Version",
+                        "name": "version",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Draft content; read-only fields are ignored",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.CampaignVO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "updated campaign draft",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.CampaignVO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "bad request",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "not editable",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/images/upload": {
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-images"
+                ],
+                "summary": "Upload image (admin)",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Image file (jpg/png/webp/gif, max 5MB)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.ImageUploadData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "validation error",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "oss not configured",
                         "schema": {
                             "$ref": "#/definitions/data.StandardResponse"
                         }
@@ -537,7 +626,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.LandingPageListData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "503": {
@@ -566,7 +667,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.LandingPageBody"
+                            "$ref": "#/definitions/data.LandingPageBody"
                         }
                     }
                 ],
@@ -574,7 +675,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.LandingPageCreateResp"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -620,7 +733,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.LandingPageDetailVO"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "404": {
@@ -662,7 +787,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.LandingPageBody"
+                            "$ref": "#/definitions/data.LandingPageBody"
                         }
                     }
                 ],
@@ -670,7 +795,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.LandingPageUpdateResp"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "404": {
@@ -696,7 +833,6 @@ const docTemplate = `{
         },
         "/admin/landing-pages/{landingPageId}/detail/{lang}": {
             "get": {
-                "description": "title/description/terms come from campaign_landing_page_translations when a row exists for lang; otherwise from campaign_landing_pages. bannerImageUrl, status, timestamps always from campaign_landing_pages.",
                 "produces": [
                     "application/json"
                 ],
@@ -724,7 +860,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/api.LandingPageLocaleDetailHTTPResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.LandingPageDetailVO"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -774,7 +922,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.PublishOperatorReq"
+                            "$ref": "#/definitions/data.PublishOperatorReq"
                         }
                     }
                 ],
@@ -782,7 +930,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.LandingPagePublishResp"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "404": {
@@ -802,7 +962,6 @@ const docTemplate = `{
         },
         "/admin/landing-pages/{landingPageId}/translations": {
             "get": {
-                "description": "Distinct lang values from the translation table only (excludes default_lang unless a translation row exists).",
                 "produces": [
                     "application/json"
                 ],
@@ -823,7 +982,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/api.LandingPageTranslatedLangsHTTPResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.LandingPageTranslatedLangsData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -849,7 +1020,7 @@ const docTemplate = `{
         },
         "/admin/landing-pages/{landingPageId}/translations/generate": {
             "post": {
-                "description": "Returns LLM-translated title/description/terms for the given landing page. Does not persist.",
+                "description": "Returns LLM-translated title/description/terms/steps/faq. Does not persist.",
                 "consumes": [
                     "application/json"
                 ],
@@ -869,12 +1040,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Source/target languages and optional source copy (falls back to landing page fields when empty)",
+                        "description": "Source/target languages and optional source copy",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.GenerateLandingTranslationReq"
+                            "$ref": "#/definitions/data.GenerateLandingTranslationReq"
                         }
                     }
                 ],
@@ -882,7 +1053,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/api.GenerateLandingTranslationHTTPResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.GenerateLandingTranslationData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -914,7 +1097,6 @@ const docTemplate = `{
         },
         "/admin/landing-pages/{landingPageId}/translations/{lang}": {
             "put": {
-                "description": "Creates or updates campaign_landing_page_translations for the given landing page and language code.",
                 "consumes": [
                     "application/json"
                 ],
@@ -946,7 +1128,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.PutLandingTranslationReq"
+                            "$ref": "#/definitions/data.PutLandingTranslationReq"
                         }
                     }
                 ],
@@ -954,7 +1136,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/api.PutLandingTranslationHTTPResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.PutLandingTranslationData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1006,96 +1200,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/web/account/summary": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user-account"
-                ],
-                "summary": "Get account summary (user)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Currency (default USDT)",
-                        "name": "currency",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "success",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "bad request",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "database unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/web/account/transactions": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user-account"
-                ],
-                "summary": "List account transactions (user)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Transaction type RECHARGE or CAMPAIGN_REWARD",
-                        "name": "type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Pagination cursor (transaction id)",
-                        "name": "cursor",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page size (default 20, max 100)",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "success",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "bad request",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "database unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/web/campaigns": {
             "get": {
                 "produces": [
@@ -1105,9 +1209,35 @@ const docTemplate = `{
                     "user-campaign"
                 ],
                 "summary": "List available campaigns (user)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Preferred language for landing-page title; default en",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.WebCampaignListData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
                         "schema": {
                             "$ref": "#/definitions/data.StandardResponse"
                         }
@@ -1123,9 +1253,6 @@ const docTemplate = `{
         },
         "/web/campaigns/{campaignId}/join": {
             "post": {
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1144,13 +1271,37 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "success or business error code in body",
+                        "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.WebJoinCampaignData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "bad request",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "campaign not found",
                         "schema": {
                             "$ref": "#/definitions/data.StandardResponse"
                         }
@@ -1183,7 +1334,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Preferred language; falls back to default",
+                        "description": "Preferred language; default en",
                         "name": "lang",
                         "in": "query"
                     }
@@ -1192,59 +1343,19 @@ const docTemplate = `{
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "database unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/web/campaigns/{campaignId}/top-up": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user-campaign"
-                ],
-                "summary": "Simulate top-up with account recharge (user)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Campaign ID",
-                        "name": "campaignId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Top-up amount",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.SimulateTopUpReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "success, manual review, or business error code",
-                        "schema": {
-                            "$ref": "#/definitions/data.StandardResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.WebCampaignLandingPageData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1253,6 +1364,18 @@ const docTemplate = `{
                             "$ref": "#/definitions/data.StandardResponse"
                         }
                     },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "campaign not found",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
                     "503": {
                         "description": "database unavailable",
                         "schema": {
@@ -1262,24 +1385,57 @@ const docTemplate = `{
                 }
             }
         },
-        "/web/user-profile": {
+        "/web/campaigns/{campaignId}/rules": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "user-profile"
+                    "user-campaign"
                 ],
-                "summary": "Get user profile (user)",
+                "summary": "Get campaign rules summary (user)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Campaign ID",
+                        "name": "campaignId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "success",
                         "schema": {
-                            "$ref": "#/definitions/api.UserProfileHTTPResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.WebCampaignRulesData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "bad request",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.StandardResponse"
                         }
                     },
                     "404": {
-                        "description": "user not found",
+                        "description": "campaign not found",
                         "schema": {
                             "$ref": "#/definitions/data.StandardResponse"
                         }
@@ -1295,61 +1451,193 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "api.CreateCampaignReq": {
+        "data.AdminParticipantCampaignVO": {
             "type": "object",
-            "required": [
-                "campaignEndTime",
-                "campaignStartTime",
-                "name",
-                "registrationEndTime",
-                "registrationStartTime",
-                "rewardRules",
-                "targetMarket",
-                "targetUserSegment",
-                "type"
-            ],
             "properties": {
-                "campaignEndTime": {
-                    "type": "string"
-                },
-                "campaignStartTime": {
-                    "type": "string"
-                },
-                "landingPageId": {
+                "id": {
                     "type": "integer"
                 },
                 "name": {
                     "type": "string"
                 },
-                "registrationEndTime": {
+                "project_id": {
+                    "type": "integer"
+                },
+                "task_group_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "data.AdminParticipantListData": {
+            "type": "object",
+            "properties": {
+                "campaign": {
+                    "$ref": "#/definitions/data.AdminParticipantCampaignVO"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.AdminParticipantVO"
+                    }
+                }
+            }
+        },
+        "data.AdminParticipantVO": {
+            "type": "object",
+            "properties": {
+                "joined_at": {
+                    "type": "integer"
+                },
+                "risk_level": {
                     "type": "string"
                 },
-                "registrationStartTime": {
-                    "type": "string"
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "data.BudgetVO": {
+            "type": "object",
+            "properties": {
+                "projectId": {
+                    "type": "integer"
                 },
-                "rewardRules": {
-                    "$ref": "#/definitions/api.RewardRulesReq"
-                },
-                "targetMarket": {
-                    "type": "string"
-                },
-                "targetUserSegment": {
-                    "type": "string"
-                },
-                "type": {
+                "projectName": {
                     "type": "string"
                 }
             }
         },
-        "api.GenerateLandingTranslationData": {
+        "data.CampaignListVO": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "data.CampaignRewardRuleVO": {
+            "type": "object",
+            "properties": {
+                "campaignId": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "taskGroupId": {
+                    "type": "integer"
+                },
+                "taskGroupReward": {
+                    "type": "integer"
+                },
+                "taskRewardItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.TaskRewardItemVO"
+                    }
+                }
+            }
+        },
+        "data.CampaignVO": {
+            "type": "object",
+            "properties": {
+                "budgets": {
+                    "$ref": "#/definitions/data.BudgetVO"
+                },
+                "campaignEndTime": {
+                    "type": "integer"
+                },
+                "campaignStartTime": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "landingPageId": {
+                    "type": "integer"
+                },
+                "market": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registrationEndTime": {
+                    "type": "integer"
+                },
+                "registrationStartTime": {
+                    "type": "integer"
+                },
+                "rewardRules": {
+                    "$ref": "#/definitions/data.CampaignRewardRuleVO"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "targetUserGroups": {
+                    "$ref": "#/definitions/data.TargetUserGroupVO"
+                },
+                "timeZone": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "data.CreateCampaignReq": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.GenerateLandingTranslationData": {
             "type": "object",
             "properties": {
                 "description": {
                     "type": "string"
                 },
+                "faq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
                 "lang": {
                     "type": "string",
                     "example": "ja"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
                 },
                 "terms": {
                     "type": "string"
@@ -1359,23 +1647,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GenerateLandingTranslationHTTPResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "data": {
-                    "$ref": "#/definitions/api.GenerateLandingTranslationData"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "success"
-                }
-            }
-        },
-        "api.GenerateLandingTranslationReq": {
+        "data.GenerateLandingTranslationReq": {
             "type": "object",
             "required": [
                 "sourceLang",
@@ -1383,28 +1655,45 @@ const docTemplate = `{
             ],
             "properties": {
                 "description": {
-                    "type": "string",
-                    "example": "Recharge now and receive \u003creward_amount\u003e bonus"
+                    "type": "string"
+                },
+                "faq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
                 },
                 "sourceLang": {
                     "type": "string",
                     "example": "en"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
                 },
                 "targetLang": {
                     "type": "string",
                     "example": "ja"
                 },
                 "terms": {
-                    "type": "string",
-                    "example": "Reward will expire in \u003cdays\u003e days"
+                    "type": "string"
                 },
                 "title": {
-                    "type": "string",
-                    "example": "Top up \u003camount\u003e to get reward"
+                    "type": "string"
                 }
             }
         },
-        "api.LandingPageBody": {
+        "data.ImageUploadData": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.LandingPageBody": {
             "type": "object",
             "required": [
                 "bannerImageUrl",
@@ -1423,6 +1712,18 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "faq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
                 "terms": {
                     "type": "string"
                 },
@@ -1431,7 +1732,45 @@ const docTemplate = `{
                 }
             }
         },
-        "api.LandingPageLocaleDetailData": {
+        "data.LandingPageCreateResp": {
+            "type": "object",
+            "properties": {
+                "bannerImageUrl": {
+                    "type": "string"
+                },
+                "defaultLang": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "faq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
+                "landingPageId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
+                "terms": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.LandingPageDetailVO": {
             "type": "object",
             "properties": {
                 "bannerImageUrl": {
@@ -1441,22 +1780,31 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "defaultLang": {
-                    "type": "string",
-                    "example": "en"
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
+                "faq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
                 "id": {
-                    "type": "integer",
-                    "example": 2001
+                    "type": "integer"
                 },
                 "lang": {
-                    "type": "string",
-                    "example": "ja"
+                    "type": "string"
                 },
                 "status": {
                     "type": "integer"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
                 },
                 "terms": {
                     "type": "string"
@@ -1469,23 +1817,63 @@ const docTemplate = `{
                 }
             }
         },
-        "api.LandingPageLocaleDetailHTTPResponse": {
+        "data.LandingPageListData": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 0
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageListItemVO"
+                    }
                 },
-                "data": {
-                    "$ref": "#/definitions/api.LandingPageLocaleDetailData"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "success"
+                "total": {
+                    "type": "integer"
                 }
             }
         },
-        "api.LandingPageTranslatedLangsData": {
+        "data.LandingPageListItemVO": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "defaultLang": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.LandingPagePublishResp": {
+            "type": "object",
+            "properties": {
+                "landingPageId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "data.LandingPageRepeatableItemVO": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.LandingPageTranslatedLangsData": {
             "type": "object",
             "properties": {
                 "langs": {
@@ -1496,23 +1884,42 @@ const docTemplate = `{
                 }
             }
         },
-        "api.LandingPageTranslatedLangsHTTPResponse": {
+        "data.LandingPageUpdateResp": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 0
+                "bannerImageUrl": {
+                    "type": "string"
                 },
-                "data": {
-                    "$ref": "#/definitions/api.LandingPageTranslatedLangsData"
+                "defaultLang": {
+                    "type": "string"
                 },
-                "message": {
-                    "type": "string",
-                    "example": "success"
+                "description": {
+                    "type": "string"
+                },
+                "faq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
+                "landingPageId": {
+                    "type": "integer"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
+                "terms": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
-        "api.PublishOperatorReq": {
+        "data.PublishOperatorReq": {
             "type": "object",
             "required": [
                 "operator"
@@ -1523,7 +1930,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.PutLandingTranslationData": {
+        "data.PutLandingTranslationData": {
             "type": "object",
             "properties": {
                 "landingPageId": {
@@ -1534,23 +1941,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.PutLandingTranslationHTTPResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "data": {
-                    "$ref": "#/definitions/api.PutLandingTranslationData"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "success"
-                }
-            }
-        },
-        "api.PutLandingTranslationReq": {
+        "data.PutLandingTranslationReq": {
             "type": "object",
             "required": [
                 "description",
@@ -1561,142 +1952,27 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "faq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
                 "operator": {
                     "type": "string",
                     "example": "admin"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
                 },
                 "terms": {
                     "type": "string"
                 },
                 "title": {
                     "type": "string"
-                }
-            }
-        },
-        "api.RewardRulesReq": {
-            "type": "object",
-            "required": [
-                "maxClaimPerUser",
-                "rewardType",
-                "topupThreshold"
-            ],
-            "properties": {
-                "maxClaimPerUser": {
-                    "type": "integer"
-                },
-                "maxRewardAmount": {
-                    "type": "number"
-                },
-                "minObtainDays": {
-                    "type": "integer"
-                },
-                "rewardAmount": {
-                    "type": "number"
-                },
-                "rewardCurrency": {
-                    "type": "string"
-                },
-                "rewardMode": {
-                    "type": "string"
-                },
-                "rewardPercentage": {
-                    "type": "number"
-                },
-                "rewardType": {
-                    "type": "string"
-                },
-                "topupThreshold": {
-                    "type": "number"
-                }
-            }
-        },
-        "api.SimulateTopUpReq": {
-            "type": "object",
-            "required": [
-                "amount"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number"
-                }
-            }
-        },
-        "api.UpdateCampaignReq": {
-            "type": "object",
-            "required": [
-                "campaignEndTime",
-                "campaignStartTime",
-                "name",
-                "registrationEndTime",
-                "registrationStartTime",
-                "rewardRules",
-                "targetMarket",
-                "targetUserSegment"
-            ],
-            "properties": {
-                "campaignEndTime": {
-                    "type": "string"
-                },
-                "campaignStartTime": {
-                    "type": "string"
-                },
-                "landingPageId": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "registrationEndTime": {
-                    "type": "string"
-                },
-                "registrationStartTime": {
-                    "type": "string"
-                },
-                "rewardRules": {
-                    "$ref": "#/definitions/api.RewardRulesReq"
-                },
-                "targetMarket": {
-                    "type": "string"
-                },
-                "targetUserSegment": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UserProfileData": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "a***e@example.com"
-                },
-                "kycChecked": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "registeredAt": {
-                    "type": "string",
-                    "example": "2026-05-16T10:00:00Z"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "alice"
-                }
-            }
-        },
-        "api.UserProfileHTTPResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "data": {
-                    "$ref": "#/definitions/api.UserProfileData"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "success"
                 }
             }
         },
@@ -1713,6 +1989,203 @@ const docTemplate = `{
                     "example": "success"
                 }
             }
+        },
+        "data.TargetUserGroupVO": {
+            "type": "object",
+            "properties": {
+                "groupName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "data.TaskRewardItemVO": {
+            "type": "object",
+            "properties": {
+                "rewardTemplateId": {
+                    "type": "integer"
+                },
+                "rewardTemplateName": {
+                    "type": "string"
+                },
+                "taskId": {
+                    "type": "integer"
+                },
+                "taskName": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.WebCampaignLandingPageData": {
+            "type": "object",
+            "properties": {
+                "campaignId": {
+                    "type": "integer",
+                    "example": 1001
+                },
+                "joined": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "joinedAt": {
+                    "type": "integer",
+                    "example": 1717200000
+                },
+                "landingPage": {
+                    "$ref": "#/definitions/data.WebLandingPageContent"
+                },
+                "market": {
+                    "type": "string",
+                    "example": "SG"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Summer Deposit Bonus"
+                },
+                "timeZone": {
+                    "type": "string",
+                    "example": "Asia/Singapore"
+                },
+                "userId": {
+                    "type": "integer",
+                    "example": 42
+                }
+            }
+        },
+        "data.WebCampaignListData": {
+            "type": "object",
+            "properties": {
+                "ongoing": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.WebCampaignListItem"
+                    }
+                },
+                "upcoming": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.WebCampaignListItem"
+                    }
+                }
+            }
+        },
+        "data.WebCampaignListItem": {
+            "type": "object",
+            "properties": {
+                "campaignEndTime": {
+                    "type": "integer",
+                    "example": 1722470400
+                },
+                "campaignStartTime": {
+                    "type": "integer",
+                    "example": 1717200000
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1001
+                },
+                "joined": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "landingPageId": {
+                    "type": "integer",
+                    "example": 2001
+                },
+                "market": {
+                    "type": "string",
+                    "example": "SG"
+                },
+                "status": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Deposit and get a bonus"
+                }
+            }
+        },
+        "data.WebCampaignRulesData": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "projectId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "taskGroupId": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "data.WebJoinCampaignData": {
+            "type": "object",
+            "properties": {
+                "campaignId": {
+                    "type": "integer",
+                    "example": 1001
+                },
+                "joined": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "joinedAt": {
+                    "type": "integer",
+                    "example": 1717200000
+                },
+                "message": {
+                    "type": "string",
+                    "example": "joined"
+                },
+                "userId": {
+                    "type": "integer",
+                    "example": 42
+                }
+            }
+        },
+        "data.WebLandingPageContent": {
+            "type": "object",
+            "properties": {
+                "bannerImageUrl": {
+                    "type": "string",
+                    "example": "https://cdn.example.com/banner.png"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Join the campaign and complete the deposit task."
+                },
+                "faq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
+                "lang": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.LandingPageRepeatableItemVO"
+                    }
+                },
+                "terms": {
+                    "type": "string",
+                    "example": "One reward per user."
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Deposit and get a bonus"
+                }
+            }
         }
     }
 }`
@@ -1724,7 +2197,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/campaign-center-api/v1",
 	Schemes:          []string{"http", "https"},
 	Title:            "Campaign Center API",
-	Description:      "HTTP API for Phase 1 user top-up campaigns (admin + user-facing). Operates under `/campaign-center-api/v1`;",
+	Description:      "HTTP API for campaign center (admin campaign/landing-page + user campaign mocks). Operates under `/campaign-center-api/v1`;",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

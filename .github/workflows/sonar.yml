@@ -33,7 +33,7 @@ jobs:
         if: steps.sonar.outputs.enabled == 'true'
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.10'
+          go-version: '1.25.12'
       - name: Run tests with coverage
         if: steps.sonar.outputs.enabled == 'true'
         run: |
@@ -47,7 +47,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >-
-            -Dsonar.projectKey=lianjin_campaign-center-api
+            -Dsonar.projectKey=nusiss-capstone-project_campaign-center-api
             -Dsonar.sources=server/service
             -Dsonar.go.coverage.reportPaths=server/coverage.out
             -Dsonar.exclusions=**/mock/**
